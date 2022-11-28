@@ -8,8 +8,8 @@
                 </div>
                 <div class="col-md-8">
                 <div class="card-body">
-                    {{ producto }}
-                    <h5 class="card-title">{{ producto.nombreProducto }}</h5>
+
+                    <h5 class="card-title">{{ producto.nombreProducto}}</h5>
                     <p class="card-text">Marca: {{ producto.marca }}</p>
                     <p class="card-text">Precio: S/. {{ producto.precio }}</p>
                     <p class="card-text"><small class="text-muted">Stock: {{ stock == 0 ? 'Stock no disponible': stock }}</small></p>
@@ -23,75 +23,84 @@
                         </button>
                     </div>
        
-                    <h4 class="mt-5">Precio total: S/. {{ totalProducto*producto.precio }} </h4>
+                    <h4 class="mt-5">Precio total: S/. {{ precioTotal(producto.precio) }} </h4>
                 </div>
                 </div>
             </div>
             </div>
         </div>
         <div class="row">
-            <div class="col-md-4">
+                <div class="col-md-4">
+                    <div class="alert alert-info" role="alert" v-if="msgFacturacion">
+                    {{ msgFacturacion }}
+                </div>
                 <form>
                     <h5>Datos de la facturación</h5>
                     <div class="form-group">
-                        <label >Nombre de la empresa</label>
+                        <label >Nombre de la empresa (*)</label>
                         <input type="text" v-model="dataEnviar.Facturacion.nombreEmpresa" class="form-control">
                     </div>
                     <div class="form-group">
-                        <label >Dirección</label>
+                        <label >Dirección (*)</label>
                         <input type="text" v-model="dataEnviar.Facturacion.direccion" class="form-control">
                     </div>
                 </form>
             </div>
 
             <div class="col-md-4">
+                <div class="alert alert-info" role="alert"  v-if="msgPedido">
+                    {{ msgPedido }}
+                </div>
                 <form action="">
                     <h5>Datos de entrega</h5>
                     <div class="form-group">
-                        <label >Cliente</label>
+                        <label >Cliente (*)</label>
                         <select v-model="dataEnviar.Pedido.idCliente" class="form-control">
                             <option disabled value="null">Seleccione un cliente</option>
                             <option v-for="item in usuarios" :key="item.index" :value="item.id_cliente">{{ item.nombre_cliente }}</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label >Fecha de compra</label>
-                        <input type="date" class="form-control">
+                        <label >Fecha de compra (*)</label>
+                        <input type="date" v-model="dataEnviar.Pedido.fechaCompra" @change="cambio($event)" class="form-control">
                     </div>
                     <div class="form-group">
-                        <label >Fecha de entrega</label>
-                        <input type="date" class="form-control">
+                        <label >Fecha de entrega (*)</label>
+                        <input type="date" v-model="dataEnviar.Pedido.fechaEntrega" class="form-control">
                     </div>
                     <div class="form-group">
                         <label >Observación</label>
-                        <input type="text" class="form-control">
+                        <textarea v-model="dataEnviar.Pedido.observaciones" class="form-control" placeholder="Si tiene alguna observación, por favor escribala aquí ....." id="floatingTextarea2" style="height: 100px"></textarea>
                     </div>
                 </form>
             </div>
 
             <div class="col-md-4">
+                <div class="alert alert-info" role="alert" v-if="msgVenta">
+                    {{ msgVenta }}
+                </div>
                 <form action="">
                     <h5>Datos remitente</h5>
                     <div class="form-group">
-                        <label >Nombre de remitente</label>
-                        <input type="text" class="form-control">
+                        <label >Nombre de remitente (*)</label>
+                        <input type="text" v-model="dataEnviar.Venta.nombreRemitente" class="form-control">
                     </div>
                     <div class="form-group">
-                        <label >Dirección remitente</label>
-                        <input type="text" class="form-control">
+                        <label >Dirección remitente (*) </label>
+                        <input type="text" v-model="dataEnviar.Venta.direccion" class="form-control">
                     </div>
                     <div class="form-group">
-                        <label >Teléfono remitente</label>
-                        <input type="text" class="form-control">
+                        <label >Teléfono remitente (*)</label>
+                        <input type="text" maxlength="9" v-model="dataEnviar.Venta.telefono" class="form-control">
                     </div>
                 </form>
             </div>
 
             <div class="d-flex justify-content-center mt-5">
-                <button class="btn btn-primary" @click="enviarData()">Registrar pedido</button>
+                <button class="btn btn-primary" @click="enviarData()" :disabled="enviando">Registrar pedido</button>
             </div>
         </div>
-        {{ dataEnviar }}
+
     </div>
 </template>
 
@@ -103,6 +112,10 @@
         name:"Detalle Productos",
         data() {
             return {
+                enviando:false,
+                msgPedido:null,
+                msgVenta:null,
+                msgFacturacion:null,
                 totalProducto:1,
                 stock:null,
                 productos:null,
@@ -135,7 +148,7 @@
                 ],
                 dataEnviar:{
                     Facturacion:{
-                        idFacturación:null,
+                        idFacturacion:null,
                         nombreEmpresa:null,
                         direccion:null,
                     },
@@ -143,7 +156,7 @@
                         idCompra:null,
                         idCliente:null,
                         idProducto:this.$route.params.idProducto,
-                        idFacturación:null,
+                        idFacturacion:null,
                         idFecha:null,
                         precioTotal:null,
                         observaciones:null,
@@ -153,8 +166,8 @@
                     Venta:{
                         idCompra:null,
                         nombreRemitente:null,
-                        direccionRemitente:null,
-                        telefonoRemitente:null
+                        direccion:null,
+                        telefono:null
                     }
                 }
             };
@@ -164,28 +177,59 @@
         },
         methods:{
             async enviarData(){
+                this.enviando = true
+
+                const data = this.dataEnviar;
+
+                // Validar datos 
+                if( data.Facturacion.nombreEmpresa !=null && 
+                    data.Facturacion.direccion != null && 
+                    data.Pedido.idCliente != null &&
+                    data.Pedido.idProducto != null && 
+                    data.Pedido.precioTotal != null &&
+                    data.Pedido.fechaCompra != null &&
+                    data.Pedido.fechaEntrega != null &&
+                    data.Venta.nombreRemitente !=null &&
+                    data.Venta.direccion !=null &&
+                    data.Venta.telefono !=null
+                 ){
+                     // Usando servicio de generarFactura 
+                    await this.axios.post(`Producto/generarFacturacion`,this.dataEnviar.Facturacion).then((res) => {
+                        this.msgFacturacion = res.data.content
+                    })
+                     
+     
+                     // Usando servicio de procesarPedido 
+                     await this.axios.post(`Producto/procesarPedido`, this.dataEnviar.Pedido).then((res) => {
+                        this.msgPedido = res.data.content
+                     })
+     
+                     // Usando servicio de generarVenta 
+                     await this.axios.post(`Producto/generarVenta`, this.dataEnviar.Venta).then((res) => {
+                        this.msgVenta = res.data.content
+                     })
+                 }else{
+                     alert('Rellene todos los campos, todos son obligatorios')
+                 }
                 
-                // Usando servicio de generarFactura 
-                await this.axios.post(`Producto/generarFacturacion`,this.dataEnviar.Facturacion).then((res) => {
-                    console.log(res.data.content)
-                })
+                this.enviando = false
 
-                // Usando servicio de procesarPedido 
-                await this.axios.post(`Producto/procesarPedido`, this.dataEnviar.Pedido).then((res) => {
-                    console.log(res.data.content)
-                })
-
-                // Usando servicio de generarVenta 
-                await this.axios.post(`Producto/generarVenta`, this.dataEnviar.Venta).then((res) => {
-                    console.log(res.data.content)
-                })
+                // Redireccionar
+                setTimeout(() => {
+                    this.$router.push('/')
+                }, "5000")
           
             },
             obtenerID(){
                 const date = Date.now()
-                this.dataEnviar.Facturacion.idFacturación=date;
-                this.dataEnviar.Pedido.idCompra=date;
-                this.dataEnviar.Venta.idCompra=date;
+                const cadena = date.toString()
+                const id_nuevo = cadena.slice(4)
+                const id = parseInt(id_nuevo)
+                this.dataEnviar.Facturacion.idFacturacion = id;
+                this.dataEnviar.Pedido.idCompra = id;
+                this.dataEnviar.Pedido.idFacturacion = id;
+                this.dataEnviar.Venta.idCompra = id;
+                this.dataEnviar.Pedido.idFecha = id
             },
             async verificarStock(){
                 await this.axios.get(`Producto/verificarDisponibilidad?id=${this.idProducto}`).then((res) => {
@@ -202,6 +246,20 @@
                     this.totalProducto--
                 }
             },
+            formatearFecha(date){
+            const dateN = new Date(date)
+                const formatDate = (current_datetime)=>{
+                    let formatted_date = current_datetime.getFullYear() + "-" + (current_datetime.getMonth() + 1) + "-" + current_datetime.getDate(); 
+                    // + " " + current_datetime.getHours() + ":" + current_datetime.getMinutes() + ":" + current_datetime.getSeconds();
+                    return formatted_date;
+                }
+
+                return formatDate(dateN);
+            },
+            precioTotal(precio){
+                this.dataEnviar.Pedido.precioTotal = this.totalProducto*precio
+                return this.dataEnviar.Pedido.precioTotal
+            }
         },
         created(){
             this.obtenerID();
@@ -226,5 +284,9 @@
         border: none;
         background: none;
         font-size: 1.5rem;
+    }
+
+    .form-group{
+        margin-top: 1.2rem ;
     }
 </style>

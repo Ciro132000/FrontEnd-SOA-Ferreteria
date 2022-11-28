@@ -1,10 +1,9 @@
 <template>
     <div >
-        Productos
-        {{ productos }}
+        <h1 class="my-4 text-center"> Bienvenido a la ferreteria ABC </h1>
         
         <div class="row">
-
+            <h4>Nuestros productos</h4>
             <div v-for="item in productos" :key="item.index" class="card m-3" style="width: 18rem;" @click="agregarProducto(item)">
                 <router-link :to="{name:'detalleProducto', params:{idProducto:item.idProducto }}">
                     <img src="../../assets/tuerca.png" class="card-img-top" alt="...">

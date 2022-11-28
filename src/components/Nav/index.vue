@@ -9,11 +9,12 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" aria-current="page" href="#">Home</a>
+                       <router-link class="nav-link" :to="{name:'productos'}">
+                           Home
+                       </router-link>
+
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" aria-current="page" href="#">Home</a>
-                    </li>
+
                 </ul>
                 </div>
             </div>
