@@ -267,7 +267,6 @@
         },
         created(){
             this.obtenerID();
-            this.verificarStock();
         },
         // unmounted(){
         //     this.$store.commit('DELETED_PRODUCTO')
