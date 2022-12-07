@@ -32,7 +32,7 @@
         },
         methods:{
             async traerProductos(){
-                await this.axios.get('Producto/listaProductos').then((res) => {
+                await this.axios.get('Producto/verificarDisponibilidad').then((res) => {
                     this.productos = res.data.content
                 })
             },

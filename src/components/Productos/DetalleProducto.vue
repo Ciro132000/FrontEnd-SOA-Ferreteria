@@ -12,7 +12,7 @@
                     <h5 class="card-title">{{ producto.nombreProducto}}</h5>
                     <p class="card-text">Marca: {{ producto.marca }}</p>
                     <p class="card-text">Precio: S/. {{ producto.precio }}</p>
-                    <p class="card-text"><small class="text-muted">Stock: {{ stock == 0 ? 'Stock no disponible': stock }}</small></p>
+                    <p class="card-text"><small class="text-muted">Stock: {{ producto.stock == 0 ? 'Stock no disponible': producto.stock }}</small></p>
                     <div>
                         <button @click="quitar()" class="btn-producto">
                             <i class="fas fa-minus-circle"></i>
@@ -30,6 +30,8 @@
             </div>
         </div>
         <div class="row">
+
+                <!-- SERVICIOS DE FACTURACIÓN  -->
                 <div class="col-md-4">
                     <div class="alert alert-info" role="alert" v-if="msgFacturacion">
                     {{ msgFacturacion }}
@@ -47,6 +49,8 @@
                 </form>
             </div>
 
+
+            <!-- SERVICIOS DE REGISTAR PEDIDO  -->
             <div class="col-md-4">
                 <div class="alert alert-info" role="alert"  v-if="msgPedido">
                     {{ msgPedido }}
@@ -75,6 +79,8 @@
                 </form>
             </div>
 
+
+            <!-- SERVICIOS DE REGISTRAR VENTA  -->
             <div class="col-md-4">
                 <div class="alert alert-info" role="alert" v-if="msgVenta">
                     {{ msgVenta }}
@@ -117,7 +123,6 @@
                 msgVenta:null,
                 msgFacturacion:null,
                 totalProducto:1,
-                stock:null,
                 productos:null,
                 idProducto:this.$route.params.idProducto,
                 usuarios:[
@@ -193,20 +198,24 @@
                     data.Venta.direccion !=null &&
                     data.Venta.telefono !=null
                  ){
+                     
                      // Usando servicio de generarFactura 
                     await this.axios.post(`Producto/generarFacturacion`,this.dataEnviar.Facturacion).then((res) => {
                         this.msgFacturacion = res.data.content
+                        console.log(res.data)
                     })
                      
      
                      // Usando servicio de procesarPedido 
                      await this.axios.post(`Producto/procesarPedido`, this.dataEnviar.Pedido).then((res) => {
                         this.msgPedido = res.data.content
+                        console.log(res.data)
                      })
      
                      // Usando servicio de generarVenta 
                      await this.axios.post(`Producto/generarVenta`, this.dataEnviar.Venta).then((res) => {
                         this.msgVenta = res.data.content
+                        console.log(res.data)
                      })
                  }else{
                      alert('Rellene todos los campos, todos son obligatorios')
@@ -231,13 +240,8 @@
                 this.dataEnviar.Venta.idCompra = id;
                 this.dataEnviar.Pedido.idFecha = id
             },
-            async verificarStock(){
-                await this.axios.get(`Producto/verificarDisponibilidad?id=${this.idProducto}`).then((res) => {
-                    this.stock = res.data.content.stock
-                })
-            },
             agregar(){
-                if(this.totalProducto + 1  <= this.stock){
+                if(this.totalProducto + 1  <= this.producto.stock){
                     this.totalProducto++
                 }
             },
